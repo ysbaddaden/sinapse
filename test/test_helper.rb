@@ -3,6 +3,8 @@ $:.unshift File.expand_path("../../lib", File.realpath(__FILE__))
 require 'bundler/setup'
 Bundler.require(:default, :test)
 
+require 'sinapse'
+
 Minitest::Reporters.use! # Minitest::Reporters::SpecReporter.new
 
 class Minitest::Spec

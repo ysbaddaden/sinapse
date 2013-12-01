@@ -1,74 +1,73 @@
-require 'bundler/setup'
-require 'redis'
-require 'celluloid/io'
-
 module Sinapse
-  class Server
-    include Celluloid::IO
+  class Server < Reel::Server
+    include Celluloid::Logger
 
-    finalizer :finalize
+    def initialize(server, options = {})
+      @handlers = []
+      async.monitor
 
-    def initialize(server_definition)
-      @sockets = []
-
-      @server = if server_definition.start_with?('/')
-                  UNIXServer.new(server_definition)
-                else
-                  hostname, port = server_definition.split(':')
-                  TCPServer.new(hostname, port.to_i)
-                end
-      async.run
+      super server, options, &method(:on_connection)
+      info "Server ready on #{server.addr[2]}:#{server.addr[1]}"
     end
 
-    def finalize
-      @server.close if @server && !@server.closed?
-      @sockets.pop { |socket| socket.close unless socket.closed? }
+    def quit
+      @handlers.pop.tap(&:close) until @handlers.empty?
     end
 
-    def run
-      loop do
-        @sockets.push(socket = @server.accept)
-        async.handle_connection(socket)
+    def monitor
+      every(Config.ping) { keep_connections_alive }
+      every(1) { cleanup_dead_connections }
+    end
+
+    private
+
+      def on_connection(connection)
+        connection.each_request { |request| handle_request(request) }
       end
-    end
 
-    def handle_connection(socket)
-      # TODO: parse the HTTP request (to get the user + token parameters)
-      # TODO: authenticate the user (to access the list of channels to listen to)
-      # TODO: (un)listen for the channels when the list is modified
-      # TODO: check for missed events and write them back
+      def handle_request(request)
+        params = parse_query_string(request)
 
-      socket.write "HTTP/1.1 200 Ok\r\n" <<
-                   "Connection: close\r\n" <<
-                   "Content-Type: text/event-stream\r\n" <<
-                   "\r\n"
+        stream = Reel::EventStream.new do |socket|
+          @handlers << Handler.new(socket, params['channel'])
+        end
 
-      socket.write "id: 0\n" <<
-                   "event: authentication\n" <<
-                   "data: ok\n" <<
-                   "\n"
-      socket.flush
+        headers = {
+          'Access-Control-Allow-Origin' => Config.access_control_allow_origin,
+          'Cache-Control' => 'no-cache',
+          'Connection' => 'close',
+          'Content-Type' => 'text/event-stream',
+          'X-Accel-Buffering' => 'no', # skips nginx' buffer
+        }
+        request.respond Reel::StreamResponse.new(:ok, headers, stream)
+      end
 
-      conn = connect
+      def parse_query_string(request)
+        Hash[*(request.query_string || '')
+          .split(/&/)
+          .map { |kv| kv.include?('=') ? kv.split(/=/) : [kv, ''] }
+          .flatten
+          .map { |s| CGI.unescape(s) }
+        ]
+      end
 
-      conn.subscribe 'sinapse' do |on|
-        on.message do |channel, payload|
-          socket.write "id: 0\nevent: #{channel}\ndata: #{payload.strip}\n\n"
-          socket.flush
+      def keep_connections_alive
+        @handlers.each { |handler| send_ping(handler) }
+      end
+
+      def cleanup_dead_connections
+        @handlers.each do |handler|
+          next unless handler.socket.closed?
+          handler.close
+          @handlers.delete(handler)
         end
       end
 
-      sleep
-
-    rescue EOFError, IOError, Errno::EPIPE, Errno::ECONNRESET
-    ensure
-      conn.close if conn rescue nil
-      socket.close if socket rescue nil
-      @sockets.delete(socket)
-    end
-
-    def connect
-      Redis.new(:driver => 'celluloid')
-    end
+      def send_ping(handler)
+        handler.socket.write(":\n")
+      rescue Reel::SocketError
+        handler.close
+        @handlers.delete(handler)
+      end
   end
 end

@@ -1,7 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'redis'
-gem 'celluloid-io'
+gem 'activesupport'
+gem 'reel', github: 'celluloid/reel'
+gem 'redis', '~> 3.0.6'
 gem 'celluloid-redis', require: false
 
 group :test do
