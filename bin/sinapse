@@ -1,0 +1,31 @@
+#! /usr/bin/env ruby
+$:.unshift File.expand_path("../../lib", File.realpath(__FILE__))
+
+require "optparse"
+require 'sinapse/server'
+require 'celluloid/autostart'
+
+options = {
+  server: "0.0.0.0:9292"
+}
+
+cli_parser = OptionParser.new do |opt|
+  opt.banner = "Usage: sinapse [OPTIONS]"
+  opt.separator ""
+  opt.separator "Options:"
+
+  opt.on("-s SERVER", "--server SERVER", "Either host:port or /path/to/socket.sock") do |server|
+    options[:server] = server
+  end
+
+  opt.on("-p PATH", "--pid PATH", "Path to PID file") do |path|
+    options[:pid] = path
+  end
+end
+
+cli_parser.parse!
+
+supervisor = Sinapse::Server.supervise(options[:server])
+trap("INT") { supervisor.terminate; exit }
+sleep
+
