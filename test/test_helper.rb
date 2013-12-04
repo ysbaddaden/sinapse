@@ -2,12 +2,15 @@ $:.unshift File.expand_path("../../lib", File.realpath(__FILE__))
 
 require 'bundler/setup'
 Bundler.require(:default, :test)
+require 'timeout'
 
 Minitest::Reporters.use! # Minitest::Reporters::SpecReporter.new
 
 class Minitest::Spec
-  def assert_event(data, event = channel_name, id = 0)
-    assert_equal "id: #{id}\nevent: #{channel_name}\ndata: #{data}", read_event
+  include Timeout
+
+  def assert_event(data, event = channel_name)
+    assert_equal "event: #{channel_name}\ndata: #{data}", read_event
   end
 
   def consume_response
@@ -31,10 +34,12 @@ class Minitest::Spec
   end
 
   def read_event
-    event = []
-    until (line = conn.readline.strip).empty?
-      event << line.rstrip
+    timeout(2) do
+      event = []
+      until (line = conn.readline.strip).empty?
+        event << line.rstrip
+      end
+      event.join("\n")
     end
-    event.join("\n")
   end
 end

@@ -1,12 +1,12 @@
 require 'test_helper'
 require 'sinapse/server'
 
-Sinapse::Server.new('localhost:9999')
+#Sinapse::Server.new('localhost:9999')
 
 describe Sinapse::Server do
   let(:channel_name) { 'sinapse' }
   let(:params) { "channel=#{channel_name}&user=julien&token=valid" }
-  let(:redis) { @redis = Redis.new(driver: 'celluloid') }
+  let(:redis) { @redis = Redis.new }
 
   let(:conn) do
     @conn = TCPSocket.new('localhost', 9999)
@@ -16,7 +16,7 @@ describe Sinapse::Server do
 
   after do
     conn.close if @conn
-    redis.client.disconnect if @redis
+    redis.quit if @redis
   end
 
   describe "connection" do
@@ -40,7 +40,7 @@ describe Sinapse::Server do
 
       it "must return authentication event" do
         consume_response
-        assert_equal "id: 0\nevent: authentication\ndata: ok", read_event
+        assert_equal "retry: 5000\nevent: authentication\ndata: ok", read_event
       end
 
       it "won't close the socket" do

@@ -1,8 +1,14 @@
 source 'https://rubygems.org'
 
+gem 'rubysl', platform: 'rbx'
+
 gem 'redis'
-gem 'celluloid-io'
-gem 'celluloid-redis', require: false
+gem 'hiredis'
+gem 'em-synchrony'
+gem 'eventmachine'
+
+gem 'thin'
+#gem 'rainbows'
 
 group :test do
   gem 'minitest', require: 'minitest/autorun'
