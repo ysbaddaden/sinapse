@@ -1,75 +1,45 @@
 require 'test_helper'
-require 'sinapse/server'
-
-#Sinapse::Server.new('localhost:9999')
 
 describe Sinapse::Server do
-  let(:channel_name) { 'sinapse' }
-  let(:params) { "channel=#{channel_name}&user=julien&token=valid" }
-  let(:redis) { @redis = Redis.new }
-
-  let(:conn) do
-    @conn = TCPSocket.new('localhost', 9999)
-    @conn.write "GET /?#{params} HTTP/1.1\r\nHost: sinapse.example.com\r\n\r\n"
-    @conn
-  end
-
-  after do
-    conn.close if @conn
-    redis.quit if @redis
-  end
-
-  describe "connection" do
-    it "must connect" do
-      assert_match(/\AHTTP\/1\.1 \d+ .+/, read_status)
-    end
-
-    it "must be an event-source stream" do
-      _, headers = read_response
-      assert_includes headers, ['content-type', 'text/event-stream']
-      assert_includes headers, ['connection', 'close']
-      refute_includes headers.flatten, 'content-length'
-    end
-  end
+  include Goliath::TestHelper
+  include RedisTestHelper
 
   describe "authentication" do
-    describe "success" do
-      it "must return ok status" do
-        assert_match(/200 OK/i, read_status)
-      end
-
-      it "must return authentication event" do
-        consume_response
-        assert_equal "retry: 5000\nevent: authentication\ndata: ok", read_event
-      end
-
-      it "won't close the socket" do
-        assert conn.readpartial(4096)
-        refute conn.closed?
+    it "returns an event-stream on success" do
+      sse_connect do |client|
+        assert_equal '*', client.headers['ACCESS_CONTROL_ALLOW_ORIGIN']
+        assert_equal 'close', client.headers['CONNECTION']
+        assert_equal 'text/event-stream', client.headers['CONTENT_TYPE']
+        assert_equal "retry: 5000\nevent: authentication\ndata: ok\n\n", client.receive
       end
     end
 
-    describe "failure" do
-      let(:params) { "channel=#{channel_name}&user=julien&token=valid" }
-
-      it "must return unauthorized status" do
-        assert_match(/401 UNAUTHORIZED/i, read_status)
-      end
-
-      it "must close the socket" do
-        assert conn.readpartial(4096)
-        assert conn.closed?
+    it "won't authenticate without token" do
+      connect(query: { access_token: '' }) do |conn|
+        assert_equal 400, conn.response_header.status
       end
     end
+
+    #it "won't authenticate with wrong token" do
+    #  connect(query: { access_token: 'invalid' }) do |client|
+    #    assert_equal 401, conn.response_header.status
+    #  end
+    #end
   end
 
   describe "events" do
-    it "must proxy published message" do
-      consume_response
-      read_event
+    let(:channel_name) { 'sinapse' }
 
-      redis.publish(channel_name, "payload message")
-      assert_event("payload message", channel_name)
+    it "must proxy published messages" do
+      sse_connect do |client|
+        client.receive # skips authentication message
+
+        assert_equal 1, redis.publish(channel_name, "payload message")
+        assert_equal "event: #{channel_name}\ndata: payload message\n\n", client.receive
+
+        assert_equal 1, redis.publish(channel_name, "another message")
+        assert_equal "event: #{channel_name}\ndata: another message\n\n", client.receive
+      end
     end
   end
 end

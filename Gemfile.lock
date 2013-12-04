@@ -1,25 +1,63 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    activesupport (3.2.16)
+      i18n (~> 0.6, >= 0.6.4)
+      multi_json (~> 1.0)
+    addressable (2.3.5)
     ansi (1.4.3)
+    async-rack (0.5.1)
+      rack (~> 1.1)
+    awesome_print (1.2.0)
     builder (3.2.2)
-    daemons (1.1.9)
+    cookiejar (0.3.0)
+    em-http-request (1.1.1)
+      addressable (>= 2.3.4)
+      cookiejar
+      em-socksify (>= 0.3)
+      eventmachine (>= 1.0.3)
+      http_parser.rb (>= 0.6.0.beta.2)
+    em-socksify (0.3.0)
+      eventmachine (>= 1.0.0.beta.4)
     em-synchrony (1.0.3)
       eventmachine (>= 1.0.0.beta.1)
+    em-websocket (0.3.8)
+      addressable (>= 2.1.1)
+      eventmachine (>= 0.12.9)
     eventmachine (1.0.3)
     ffi2-generators (0.1.1)
+    goliath (1.0.3)
+      async-rack
+      em-synchrony (>= 1.0.0)
+      em-websocket (= 0.3.8)
+      eventmachine (>= 1.0.0.beta.4)
+      http_parser.rb (= 0.6.0.beta.2)
+      log4r
+      multi_json
+      rack (>= 1.2.2)
+      rack-contrib
+      rack-respond_to
     hashie (2.0.5)
     hiredis (0.4.5)
-    minitest (5.0.6)
+    http_parser.rb (0.6.0.beta.2)
+    i18n (0.6.9)
+    log4r (1.1.10)
+    minitest (5.0.8)
     minitest-reporters (1.0.0)
       ansi
       builder
       minitest (>= 5.0)
       powerbar
+    multi_json (1.8.2)
     powerbar (1.0.11)
       ansi (~> 1.4.0)
       hashie (>= 1.1.0)
     rack (1.5.2)
+    rack-accept-media-types (0.9)
+    rack-contrib (1.1.0)
+      rack (>= 0.9.1)
+    rack-respond_to (0.9.8)
+      rack-accept-media-types (>= 0.6)
     redis (3.0.6)
     rubysl (2.0.15)
       rubysl-abbrev (~> 2.0)
@@ -185,7 +223,7 @@ GEM
     rubysl-ostruct (2.0.4)
     rubysl-pathname (2.0.0)
     rubysl-prettyprint (2.0.2)
-    rubysl-prime (2.0.0)
+    rubysl-prime (2.0.1)
     rubysl-profile (2.0.0)
     rubysl-profiler (2.0.1)
     rubysl-pstore (2.0.0)
@@ -223,20 +261,17 @@ GEM
     rubysl-xmlrpc (2.0.0)
     rubysl-yaml (2.0.4)
     rubysl-zlib (2.0.1)
-    thin (1.6.1)
-      daemons (>= 1.0.9)
-      eventmachine (>= 1.0.0)
-      rack (>= 1.0.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  em-synchrony
-  eventmachine
+  activesupport
+  awesome_print
+  em-http-request
+  goliath
   hiredis
   minitest
   minitest-reporters
   redis
   rubysl
-  thin

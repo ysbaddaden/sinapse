@@ -1,45 +1,28 @@
 $:.unshift File.expand_path("../../lib", File.realpath(__FILE__))
+RACK_ENV ||= ENV['RACK_ENV'] ||= 'test'
 
 require 'bundler/setup'
-Bundler.require(:default, :test)
-require 'timeout'
+Bundler.require(:default, RACK_ENV)
+Goliath.env = RACK_ENV
+
+require 'sinapse'
+require 'goliath/test_helper'
+require_relative 'support/event_source'
 
 Minitest::Reporters.use! # Minitest::Reporters::SpecReporter.new
 
-class Minitest::Spec
-  include Timeout
-
-  def assert_event(data, event = channel_name)
-    assert_equal "event: #{channel_name}\ndata: #{data}", read_event
+module RedisTestHelper
+  def redis
+    @redis ||= Redis.new
   end
+end
 
-  def consume_response
-    until conn.readline.strip.empty? do end
-  end
-
-  def read_response
-    [read_status, read_headers]
-  end
-
-  def read_status
-    conn.readline.rstrip
-  end
-
-  def read_headers
-    headers = []
-    until (line = conn.readline.strip).empty?
-      headers << line.downcase.split(':').map(&:strip)
-    end
-    headers
-  end
-
-  def read_event
-    timeout(2) do
-      event = []
-      until (line = conn.readline.strip).empty?
-        event << line.rstrip
+module Goliath
+  module TestHelper
+    def connect(query_params = nil, &blk)
+      with_api(Sinapse::Server) do
+        get_request(query_params, &blk)
       end
-      event.join("\n")
     end
   end
 end
