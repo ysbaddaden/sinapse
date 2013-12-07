@@ -1,5 +1,3 @@
-require 'pp'
-
 module Goliath
   module TestHelper
     class EventSourceHelper

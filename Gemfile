@@ -1,20 +1,12 @@
 source 'https://rubygems.org'
 
-gem 'rubysl', platform: 'rbx'
-
-gem 'activesupport', require: false
+gem 'goliath'
 gem 'redis'
 gem 'hiredis'
 
-#gem 'em-synchrony'
-#gem 'eventmachine'
-
-gem 'goliath'
-#gem 'thin'
-#gem 'rainbows'
-
-group :development, :test do
-  gem 'awesome_print', require: 'ap'
+platform :rbx do
+  gem 'rubysl-base64'
+  gem 'rubysl-prettyprint', group: [:development, :test]
 end
 
 group :test do

@@ -1,5 +1,3 @@
-require 'active_support/core_ext/object/blank'
-
 module Sinapse
   module Config
     extend self
@@ -19,10 +17,10 @@ module Sinapse
     private
 
       def default(name, default_value)
-        if ENV[name.to_s].blank?
-          default_value.to_s
-        else
+        if ENV.has_key?(name.to_s)
           ENV[name.to_s]
+        else
+          default_value.to_s
         end
       end
   end
