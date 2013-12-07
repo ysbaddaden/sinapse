@@ -5,15 +5,15 @@ module Sinapse
     extend self
 
     def retry
-      @retry ||= default(:SINAPSE_RETRY, 5).to_i * 1000
+      default(:SINAPSE_RETRY, 5).to_i * 1000
     end
 
     def keep_alive
-      @keep_alive ||= default(:SINAPSE_KEEP_ALIVE, 15).to_i
+      default(:SINAPSE_KEEP_ALIVE, 15).to_i
     end
 
     def cors_origin
-      @cors_origin ||= default(:SINAPSE_CORS_ORIGIN, '*')
+      default(:SINAPSE_CORS_ORIGIN, '*')
     end
 
     private

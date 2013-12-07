@@ -1,17 +1,21 @@
+require 'pp'
+
 module Goliath
   module TestHelper
     class EventSourceHelper
       attr_reader :connection
 
       def initialize(url, request_data = {})
-        @queue = EM::Queue.new
         @header = EM::Queue.new
+        @queue = EM::Queue.new
 
         @connection = EM::HttpRequest.new(url).aget(request_data)
 
         @connection.errback do |e|
-          puts "Error encountered during connection: #{e}"
-          EM.stop_event_loop
+          if e.response_header.status >= 400
+            EM.stop_event_loop
+            raise "Error encountered during HTTP connection (#{e.response_header.status}): #{e}"
+          end
         end
 
         @connection.callback { EM.stop_event_loop }
@@ -34,6 +38,10 @@ module Goliath
         fiber = Fiber.current
         @queue.pop { |m| fiber.resume(m) }
         Fiber.yield
+      end
+
+      def close
+        @connection.close
       end
     end
 

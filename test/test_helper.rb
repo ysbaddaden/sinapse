@@ -13,7 +13,7 @@ Minitest::Reporters.use! # Minitest::Reporters::SpecReporter.new
 
 module RedisTestHelper
   def redis
-    @redis ||= Redis.new
+    @redis ||= Redis.new(:driver => :synchrony)
   end
 end
 
