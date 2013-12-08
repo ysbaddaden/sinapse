@@ -4,6 +4,24 @@ describe Sinapse::Server do
   include Goliath::TestHelper
   include RedisTestHelper
 
+  before do
+    EM.synchrony do
+      redis.set('sinapse:token:valid', '1')
+      redis.sadd('sinapse:channels:1', 'user:1')
+      redis.sadd('sinapse:channels:1', 'room:2')
+      redis.sadd('sinapse:channels:1', 'room:4')
+      EM.stop_event_loop
+    end
+  end
+
+  after do
+    EM.synchrony do
+      redis.del('sinapse:token:valid')
+      redis.del('sinapse:channels:1')
+      EM.stop_event_loop
+    end
+  end
+
   describe "authentication" do
     it "returns an event-stream on success" do
       sse_connect do |client|
@@ -15,20 +33,20 @@ describe Sinapse::Server do
     end
 
     it "won't authenticate without token" do
-      connect(query: { access_token: '' }) do |conn|
-        assert_equal 400, conn.response_header.status
+      connect(query: { access_token: '' }) do |client|
+        assert_equal 400, client.response_header.status
       end
     end
 
-    #it "won't authenticate with unknown token" do
-    #  connect(query: { access_token: 'invalid' }) do |client|
-    #    assert_equal 401, conn.response_header.status
-    #  end
-    #end
+    it "won't authenticate with unknown token" do
+      connect(query: { access_token: 'invalid' }) do |client|
+        assert_equal 401, client.response_header.status
+      end rescue LocalJumpError
+    end
   end
 
   describe "pub/sub" do
-    let(:channel_name) { 'sinapse' }
+    let(:channel_name) { 'user:1' }
 
     it "proxies published messages" do
       sse_connect do |client|

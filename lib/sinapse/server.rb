@@ -14,13 +14,15 @@ module Sinapse
       keep_alive.delete(env)
     end
 
-    # TODO: actually authentify the user
     def response(env)
       env['redis'] = Redis.new(:driver => :synchrony)
 
+      channels = authenticate(env)
+      return [401, {}, []] if channels.nil? || channels.empty?
+
       EM.next_tick do
         sse(env, :ok, :authentication, retry: Config.retry)
-        subscribe(env)
+        subscribe(env, channels)
         keep_alive << env
       end
 
@@ -33,17 +35,18 @@ module Sinapse
 
     private
 
-      # TODO: subcribe to user's authorized channels
-      # TODO: (un)subscribe to channels when a user gains/loses permissions on a channel
-      def subscribe(env)
-        redis = env['redis']
+      def authenticate(env)
+        user = env['redis'].get("sinapse:token:#{params['access_token']}")
+        env['redis'].smembers("sinapse:channels:#{user}") if user
+      end
 
+      # TODO: (un)subscribe to channels when a user gains/loses permissions on a channel
+      def subscribe(env, channels)
         EM.synchrony do
-          redis.subscribe('sinapse') do |on|
+          env['redis'].subscribe(*channels) do |on|
             on.message { |channel, message| sse(env, message, channel) }
           end
-
-          redis.quit
+          env['redis'].quit
         end
       end
 
