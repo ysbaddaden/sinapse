@@ -9,7 +9,7 @@ require 'sinapse'
 require 'goliath/test_helper'
 require_relative 'support/event_source'
 
-Minitest::Reporters.use! # Minitest::Reporters::SpecReporter.new
+Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
 module RedisTestHelper
   def redis
