@@ -37,17 +37,36 @@ module Sinapse
 
       def authenticate(env)
         user = env['redis'].get("sinapse:token:#{params['access_token']}")
-        env['redis'].smembers("sinapse:channels:#{user}") if user
+        if user
+          channels = env['redis'].smembers("sinapse:channels:#{user}")
+          channels << "sinapse:channels:#{user}" if channels.any?
+          channels
+        end
       end
 
-      # TODO: (un)subscribe to channels when a user gains/loses permissions on a channel
       def subscribe(env, channels)
+        env['sinapse.channels'] = channels
+
         EM.synchrony do
           env['redis'].subscribe(*channels) do |on|
-            on.message { |channel, message| sse(env, message, channel) }
+            on.message do |channel, message|
+              if channel.start_with?('sinapse:channels:')
+                update_subscriptions(env, JSON.parse(message))
+              else
+                sse(env, message, channel)
+              end
+            end
           end
           env['redis'].quit
         end
+      end
+
+      def update_subscriptions(env, new_channels)
+        added = new_channels - env['sinapse.channels']
+        removed = env['sinapse.channels'] - new_channels
+        env['redis'].subscribe(*added) if added.any?
+        env['redis'].unsubscribe(*removed) if removed.any?
+        env['sinapse.channels'] = new_channels
       end
 
       def sse(env, data, event = nil, options = {})

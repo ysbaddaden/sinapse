@@ -66,6 +66,24 @@ describe Sinapse::Server do
         EM.synchrony { assert_equal 0, redis.publish(channel_name, "message") }
       end
     end
+
+    it "updates subscriptions when the list changes" do
+      sse_connect do |client|
+        client.receive
+
+        redis.srem('sinapse:channels:1', 'room:2')
+        redis.sadd('sinapse:channels:1', 'room:5')
+        redis.publish('sinapse:channels:1', JSON.dump(redis.smembers('sinapse:channels:1')))
+
+        assert_equal 1, redis.publish('room:4', "message for room 4")
+        assert_equal "event: room:4\ndata: message for room 4\n\n", client.receive
+
+        assert_equal 1, redis.publish('room:5', "message for room 5")
+        assert_equal "event: room:5\ndata: message for room 5\n\n", client.receive
+
+        assert_equal 0, redis.publish('room:2', "message for room 2")
+      end
+    end
   end
 
   describe "config" do

@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 gem 'goliath'
 gem 'redis'
 gem 'hiredis'
+gem 'json'
 
 platform :rbx do
   gem 'rubysl-base64'
