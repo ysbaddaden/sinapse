@@ -57,6 +57,7 @@ GEM
     redis (3.0.6)
     rubysl-base64 (2.0.0)
     rubysl-prettyprint (2.0.2)
+    rubysl-singleton (2.0.0)
 
 PLATFORMS
   ruby
@@ -72,3 +73,4 @@ DEPENDENCIES
   redis
   rubysl-base64
   rubysl-prettyprint
+  rubysl-singleton

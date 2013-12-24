@@ -7,6 +7,7 @@ gem 'json'
 
 platform :rbx do
   gem 'rubysl-base64'
+  gem 'rubysl-singleton'
   gem 'rubysl-prettyprint', group: [:development]
 end
 
