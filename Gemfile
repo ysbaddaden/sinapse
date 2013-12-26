@@ -7,10 +7,15 @@ gem 'connection_pool'
 gem 'activesupport', require: false
 
 platform :rbx do
-  gem 'rubysl-base64'
-  gem 'rubysl-singleton'
-  gem 'rubysl-mutex_m', group: [:test]
-  gem 'rubysl-prettyprint', group: [:development]
+  group :development do
+    gem 'rubysl-prettyprint'
+  end
+
+  group :test do
+    gem 'rubysl-singleton'  # required by rake
+    gem 'rubysl-base64'     # required by em-http-request
+    gem 'rubysl-mutex_m'    # required by minitest 5.2
+  end
 end
 
 group :test do
@@ -19,4 +24,3 @@ group :test do
   gem 'minitest', require: 'minitest/autorun'
   gem 'minitest-reporters'
 end
-
