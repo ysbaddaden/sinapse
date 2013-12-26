@@ -37,7 +37,7 @@ describe "Sinapse::Channels" do
   end
 
   it "channels" do
-    assert_equal ['room:1', 'room:83'], user.sinapse.channels
+    assert_equal ['room:1', 'room:83'], user.sinapse.channels.sort
     assert_equal [], User.new(2).sinapse.channels
   end
 
