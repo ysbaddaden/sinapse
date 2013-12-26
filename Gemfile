@@ -4,10 +4,13 @@ gem 'goliath'
 gem 'redis'
 gem 'hiredis'
 gem 'json'
+gem 'connection_pool'
+gem 'activesupport', require: false
 
 platform :rbx do
   gem 'rubysl-base64'
   gem 'rubysl-singleton'
+  gem 'rubysl-mutex_m', group: [:test]
   gem 'rubysl-prettyprint', group: [:development]
 end
 

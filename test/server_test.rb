@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'sinapse/server'
 
 describe Sinapse::Server do
   include Goliath::TestHelper

@@ -6,23 +6,21 @@ Bundler.require(:default, RACK_ENV)
 Goliath.env = RACK_ENV
 
 require 'sinapse'
-require 'goliath/test_helper'
 require_relative 'support/event_source'
+require_relative 'support/redis'
+require_relative 'support/goliath'
 
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
-module RedisTestHelper
-  def redis
-    @redis ||= Redis.new(:driver => :synchrony)
-  end
+class User < Struct.new(:id)
+  include Sinapse
+
+  def to_param; id.to_s; end
 end
 
-module Goliath
-  module TestHelper
-    def connect(query_params = nil, &blk)
-      with_api(Sinapse::Server) do
-        get_request(query_params, &blk)
-      end
-    end
-  end
+class Room < Struct.new(:id)
+  include Sinapse::Publishable
+
+  def to_param; id.to_s; end
 end
+

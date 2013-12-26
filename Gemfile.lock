@@ -1,11 +1,15 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    activesupport (3.2.16)
+      i18n (~> 0.6, >= 0.6.4)
+      multi_json (~> 1.0)
     addressable (2.3.5)
     ansi (1.4.3)
     async-rack (0.5.1)
       rack (~> 1.1)
     builder (3.2.2)
+    connection_pool (1.2.0)
     cookiejar (0.3.0)
     em-http-request (1.1.1)
       addressable (>= 2.3.4)
@@ -35,9 +39,10 @@ GEM
     hashie (2.0.5)
     hiredis (0.4.5)
     http_parser.rb (0.6.0.beta.2)
+    i18n (0.6.9)
     json (1.8.1)
     log4r (1.1.10)
-    minitest (5.0.8)
+    minitest (5.2.0)
     minitest-reporters (1.0.0)
       ansi
       builder
@@ -53,9 +58,10 @@ GEM
       rack (>= 0.9.1)
     rack-respond_to (0.9.8)
       rack-accept-media-types (>= 0.6)
-    rake (10.1.0)
+    rake (10.1.1)
     redis (3.0.6)
     rubysl-base64 (2.0.0)
+    rubysl-mutex_m (2.0.0)
     rubysl-prettyprint (2.0.2)
     rubysl-singleton (2.0.0)
 
@@ -63,6 +69,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  activesupport
+  connection_pool
   em-http-request
   goliath
   hiredis
@@ -72,5 +80,6 @@ DEPENDENCIES
   rake
   redis
   rubysl-base64
+  rubysl-mutex_m
   rubysl-prettyprint
   rubysl-singleton

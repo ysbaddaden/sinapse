@@ -1,3 +1,6 @@
+require 'sinapse/config'
+require 'sinapse/keep_alive'
+
 module Sinapse
   class Server < Goliath::API
     use Goliath::Rack::Params
