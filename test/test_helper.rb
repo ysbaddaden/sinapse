@@ -6,9 +6,10 @@ Bundler.require(:default, RACK_ENV)
 Goliath.env = RACK_ENV
 
 require 'sinapse'
-require_relative 'support/event_source'
 require_relative 'support/redis'
+require_relative 'support/timeout'
 require_relative 'support/goliath'
+require_relative 'support/event_source'
 
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
