@@ -20,12 +20,12 @@ module Sinapse
     def response(env)
       env['redis'] = Redis.new(:driver => :synchrony)
 
-      channels = authenticate(env)
-      return [401, {}, []] if channels.nil? || channels.empty?
+      user, channels = authenticate(env)
+      return [401, {}, []] if user.nil? || channels.empty?
 
       EM.next_tick do
         sse(env, :ok, :authentication, retry: Config.retry)
-        subscribe(env, channels)
+        subscribe(env, user, channels)
         keep_alive << env
       end
 
@@ -42,34 +42,24 @@ module Sinapse
         user = env['redis'].get("sinapse:token:#{params['access_token']}")
         if user
           channels = env['redis'].smembers("sinapse:channels:#{user}")
-          channels << "sinapse:channels:#{user}" if channels.any?
-          channels
+          [user, channels]
         end
       end
 
-      def subscribe(env, channels)
-        env['sinapse.channels'] = channels
-
+      def subscribe(env, user, channels)
         EM.synchrony do
-          env['redis'].subscribe(*channels) do |on|
-            on.message do |channel, message|
-              if channel.start_with?('sinapse:channels:')
-                update_subscriptions(env, JSON.parse(message))
-              else
-                sse(env, message, channel)
-              end
-            end
+          env['redis'].psubscribe("sinapse:channels:#{user}:*") do |on|
+            on.psubscribe { env['redis'].subscribe(*channels) }
+            on.pmessage { |_, channel, message| update_subscriptions(env, message, channel) }
+            on.message { |channel, message| sse(env, message, channel) }
           end
           env['redis'].quit
         end
       end
 
-      def update_subscriptions(env, new_channels)
-        added = new_channels - env['sinapse.channels']
-        removed = env['sinapse.channels'] - new_channels
-        env['redis'].subscribe(*added) if added.any?
-        env['redis'].unsubscribe(*removed) if removed.any?
-        env['sinapse.channels'] = new_channels
+      def update_subscriptions(env, message, channel)
+        return env['redis'].subscribe(message)   if channel.end_with?(':add')
+        return env['redis'].unsubscribe(message) if channel.end_with?(':remove')
       end
 
       def sse(env, data, event = nil, options = {})

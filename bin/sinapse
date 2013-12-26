@@ -6,5 +6,5 @@ RACK_ENV ||= ENV['RACK_ENV'] ||= 'development'
 require 'bundler/setup'
 Bundler.require(:default, RACK_ENV)
 
-require 'sinapse'
+require 'sinapse/server'
 

@@ -59,7 +59,11 @@ describe Sinapse::Server do
 
     it "proxies published messages" do
       sse_connect do |client|
-        client.receive # skips authentication message
+        # skips authentication message
+        client.receive
+
+        # waiting for server to be listening
+        sleep 0.001 until redis.publish('sinapse:channels:1:wait', nil) == 1
 
         assert_equal 1, redis.publish(channel_name, "payload message")
         assert_equal "event: #{channel_name}\ndata: payload message\n\n", client.receive
@@ -81,8 +85,10 @@ describe Sinapse::Server do
         client.receive
 
         redis.srem('sinapse:channels:1', 'room:2')
+        redis.publish('sinapse:channels:1:remove', 'room:2')
+
         redis.sadd('sinapse:channels:1', 'room:5')
-        redis.publish('sinapse:channels:1', JSON.dump(redis.smembers('sinapse:channels:1')))
+        redis.publish('sinapse:channels:1:add', 'room:5')
 
         assert_equal 1, redis.publish('room:4', "message for room 4")
         assert_equal "event: room:4\ndata: message for room 4\n\n", client.receive

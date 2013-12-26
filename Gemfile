@@ -3,7 +3,6 @@ source 'https://rubygems.org'
 gem 'goliath'
 gem 'redis'
 gem 'hiredis'
-gem 'json'
 gem 'connection_pool'
 gem 'activesupport', require: false
 
