@@ -15,13 +15,16 @@ Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
 class User < Struct.new(:id)
   include Sinapse
+  def to_param; id.to_s; end
+end
 
+class Admin < Struct.new(:id)
+  include Sinapse
   def to_param; id.to_s; end
 end
 
 class Room < Struct.new(:id)
   include Sinapse::Publishable
-
   def to_param; id.to_s; end
 end
 

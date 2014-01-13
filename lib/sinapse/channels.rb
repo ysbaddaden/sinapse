@@ -1,5 +1,9 @@
 module Sinapse
   class Channels < Struct.new(:record)
+    def auth
+      @auth ||= Authentication.new(record)
+    end
+
     def channels
       Sinapse.redis { |redis| redis.smembers(key) }
     end
