@@ -7,6 +7,8 @@ gem 'connection_pool'
 gem 'activesupport', require: false
 
 platform :rbx do
+  gem 'rubysl-securerandom'
+
   group :development do
     gem 'rubysl-prettyprint'
   end
