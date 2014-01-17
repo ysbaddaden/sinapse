@@ -28,7 +28,6 @@ describe Sinapse::Server do
   describe "authentication" do
     it "returns an event-stream on success" do
       sse_connect do |client|
-        assert_equal '*', client.headers['ACCESS_CONTROL_ALLOW_ORIGIN']
         assert_equal 'close', client.headers['CONNECTION']
         assert_equal 'text/event-stream', client.headers['CONTENT_TYPE']
         assert_equal "retry: 5000\nevent: authentication\ndata: ok\n\n", client.receive
@@ -54,13 +53,43 @@ describe Sinapse::Server do
     end
   end
 
+  describe "cross origin resource sharing (when requested)" do
+    it "returns CORS headers on auth success" do
+      sse_connect(head: { origin: 'http://example.com' }) do |client|
+        assert_equal 'text/event-stream', client.headers['CONTENT_TYPE']
+        assert_equal 'http://example.com', client.headers['ACCESS_CONTROL_ALLOW_ORIGIN']
+        refute_nil client.headers['ACCESS_CONTROL_ALLOW_METHODS']
+      end
+    end
+
+    it "skips CORS headers when configured origin doesn't match" do
+      stub_origin('test.host') do
+        sse_connect(head: { origin: "http://example.com" }) do |client|
+          assert_nil client.headers['ACCESS_CONTROL_ALLOW_ORIGIN']
+          assert_nil client.headers['ACCESS_CONTROL_ALLOW_METHODS']
+        end
+      end
+    end
+
+    def stub_origin(forced)
+      Sinapse::Server.middlewares.each do |middleware, params, _|
+        next unless middleware == Sinapse::Rack::CrossOriginResourceSharing
+        options = params.first
+        original = options[:origin]
+        options[:origin] = forced
+        yield
+        options[:origin] = original
+        return
+      end
+    end
+  end
+
   describe "pub/sub" do
     let(:channel_name) { 'user:1' }
 
     it "proxies published messages" do
       sse_connect do |client|
-        # skips authentication message
-        client.receive
+        client.receive # skips authentication message
 
         # waiting for server to be listening
         sleep 0.001 until redis.publish('sinapse:channels:1:wait', nil) == 1
@@ -101,36 +130,25 @@ describe Sinapse::Server do
     end
   end
 
-  describe "config" do
-    before do
-      ENV['SINAPSE_CORS_ORIGIN'] = 'example.com'
-      ENV['SINAPSE_RETRY'] = '12'
-    end
-
-    after do
-      ENV['SINAPSE_CORS_ORIGIN'] = nil
-      ENV['SINAPSE_RETRY'] = nil
-    end
-
-    it "uses the config" do
-      sse_connect do |client|
-        assert_equal 'example.com', client.headers['ACCESS_CONTROL_ALLOW_ORIGIN']
-        assert_match /retry: 12000\n/, client.receive
+  describe "retry" do
+    it "uses configured value" do
+      Sinapse::Config.stub(:retry, 12000) do
+        sse_connect(head: { origin: 'http://example.com' }) do |client|
+          assert_match /retry: 12000\n/, client.receive
+        end
       end
     end
   end
 
   describe "keep alive" do
-    before { ENV['SINAPSE_KEEP_ALIVE'] = '0.001' }
-    after  { ENV['SINAPSE_KEEP_ALIVE'] = nil }
-
     it "periodically sends a comment" do
-      sse_connect do |client|
-        client.receive # skips authentication message
-
-        assert_equal ":\n", client.receive
-        assert_equal ":\n", client.receive
-        assert_equal ":\n", client.receive
+      Sinapse::Config.stub(:keep_alive, 0.001) do
+        sse_connect do |client|
+          client.receive # skips authentication message
+          assert_equal ":\n", client.receive
+          assert_equal ":\n", client.receive
+          assert_equal ":\n", client.receive
+        end
       end
     end
   end

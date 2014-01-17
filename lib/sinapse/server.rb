@@ -1,8 +1,10 @@
 require 'sinapse/config'
 require 'sinapse/keep_alive'
+require 'sinapse/cross_origin_resource_sharing'
 
 module Sinapse
   class Server < Goliath::API
+    use Sinapse::Rack::CrossOriginResourceSharing, origin: Config.cors_origin
     use Goliath::Rack::Params
     use Goliath::Rack::Heartbeat  # respond to /status with 200, OK (monitoring, etc)
     use Goliath::Rack::Validation::RequestMethod, %w(GET POST)
@@ -29,11 +31,7 @@ module Sinapse
         keep_alive << env
       end
 
-      chunked_streaming_response(200,
-        'Access-Control-Allow-Origin' => Config.cors_origin,
-        'Connection' => 'close',
-        'Content-Type' => 'text/event-stream'
-      )
+      chunked_streaming_response(200, response_headers(env))
     end
 
     private
@@ -76,6 +74,18 @@ module Sinapse
           redis.unsubscribe
         else
           redis.quit
+        end
+      end
+
+      def response_headers(env)
+        headers = {
+          'Connection' => 'close',
+          'Content-Type' => 'text/event-stream'
+        }
+        if env['cors.headers']
+          headers.merge(env['cors.headers'])
+        else
+          headers
         end
       end
   end

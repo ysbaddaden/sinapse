@@ -50,7 +50,8 @@ module Goliath
     end
 
     def sse_connect(query_params = nil, &blk)
-      query_params ||= { query: { access_token: 'valid' } }
+      query_params ||= {}
+      query_params[:query] ||= { access_token: 'valid' }
 
       with_api(Sinapse::Server, { verbose: true, log_stdout: true }) do |server|
         aget_request(query_params) do |client|
