@@ -1,3 +1,4 @@
+require 'sinapse/version'
 require 'sinapse/authentication'
 require 'sinapse/channels'
 require 'sinapse/publishable'
