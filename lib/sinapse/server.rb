@@ -37,7 +37,7 @@ module Sinapse
     private
 
       def authenticate(env)
-        user = env['redis'].get("sinapse:token:#{params['access_token']}")
+        user = env['redis'].get("sinapse:tokens:#{params['access_token']}")
         if user
           channels = env['redis'].smembers("sinapse:channels:#{user}")
           [user, channels]

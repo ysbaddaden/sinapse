@@ -2,6 +2,8 @@ require 'sinapse/version'
 require 'sinapse/authentication'
 require 'sinapse/channels'
 require 'sinapse/publishable'
+require 'connection_pool'
+require 'redis'
 
 module Sinapse
   def sinapse

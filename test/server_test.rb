@@ -7,8 +7,8 @@ describe Sinapse::Server do
 
   before do
     EM.synchrony do
-      redis.set('sinapse:token:valid', '1')
-      redis.set('sinapse:token:empty', '2')
+      redis.set('sinapse:tokens:valid', '1')
+      redis.set('sinapse:tokens:empty', '2')
       redis.sadd('sinapse:channels:1', 'user:1')
       redis.sadd('sinapse:channels:1', 'room:2')
       redis.sadd('sinapse:channels:1', 'room:4')
@@ -18,8 +18,8 @@ describe Sinapse::Server do
 
   after do
     EM.synchrony do
-      redis.del('sinapse:token:valid')
-      redis.del('sinapse:token:empty')
+      redis.del('sinapse:tokens:valid')
+      redis.del('sinapse:tokens:empty')
       redis.del('sinapse:channels:1')
       EM.stop_event_loop
     end
