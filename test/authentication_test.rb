@@ -18,7 +18,7 @@ describe "Sinapse::Authentication" do
   describe "generate" do
     it "must generate token" do
       Sinapse.stub(:generate_token, 'valid') do
-        auth.generate
+        assert_equal 'valid', auth.generate
 
         Sinapse.redis do |redis|
           assert_equal 'valid', redis.get(auth.key)
@@ -32,7 +32,7 @@ describe "Sinapse::Authentication" do
 
       Sinapse.stub(:generate_token, lambda { tokens.shift }) do
         User.new(2).sinapse.auth.generate
-        auth.generate
+        assert_equal 'second', auth.generate
 
         Sinapse.redis do |redis|
           assert_equal 'second', redis.get(auth.key)

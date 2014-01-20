@@ -17,7 +17,7 @@ module Sinapse
           token = Sinapse.generate_token
           if redis.setnx(token_key(token), record.to_param)
             redis.set(key, token)
-            break
+            return token
           end
         end
       end
