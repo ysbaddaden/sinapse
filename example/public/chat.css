@@ -1,0 +1,93 @@
+body {
+    margin: 0;
+    padding: 1em;
+    font: normal normal 16px/1.4 sans-serif;
+    color: #222;
+    background: #fff;
+}
+
+.field {
+    margin-bottom: 1em;
+}
+
+input[type=text] {
+    border: 1px solid #555;
+    font: normal normal 16px/1.4 sans-serif;
+    line-height: 1.4;
+}
+
+input[type=submit] {
+    font: normal normal 16px/1.4 sans-serif;
+    line-height: 1.4;
+    border: 1px solid #555;
+    background: #f4f4f4;
+}
+
+.grid {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.grid.full-height .cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.cell {
+    flex: 1;
+    background: #f4f4f4;
+}
+
+h1 { margin: 0; }
+
+#sidebar {
+    flex: none;
+    width: 100px;
+}
+
+.room-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+.room-list li {
+    display: block;
+}
+.room-list a {
+    display: block;
+    padding: .25em 1em;
+}
+
+.message-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.message {
+    display: flex;
+    flex-direction: row;
+    padding: .25em 1em;
+    border-bottom: 1px solid #ccc;
+}
+form.message {
+    border-bottom: 0;
+    margin-bottom: 1em;
+}
+.message-user {
+    flex: none;
+    width: 100px;
+    text-align: right;
+    padding-right: 1em;
+    color: #888;
+}
+.message-body {
+    flex: 1;
+}
+.message-body input {
+    width: 100%;
+}
+.message-button {
+    flex: 1;
+}
