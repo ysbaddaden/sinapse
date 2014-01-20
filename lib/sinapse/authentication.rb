@@ -5,6 +5,7 @@ module Sinapse
     SecureRandom.urlsafe_base64(64)
   end
 
+  # TODO: #get to return the token (if any)
   class Authentication < Struct.new(:record)
     def reset
       clear

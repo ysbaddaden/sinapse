@@ -1,4 +1,6 @@
 module Sinapse
+  # TODO: #clear to drop all channels at once
+  # TODO: #destroy to drop the user token and all its channels at once
   class Channels < Struct.new(:record)
     def auth
       @auth ||= Authentication.new(record)
