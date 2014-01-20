@@ -95,10 +95,12 @@ describe Sinapse::Server do
         sleep 0.001 until redis.publish('sinapse:channels:1:wait', nil) == 1
 
         assert_equal 1, redis.publish(channel_name, "payload message")
-        assert_equal "event: #{channel_name}\ndata: payload message\n\n", client.receive
+        #assert_equal "event: #{channel_name}\ndata: payload message\n\n", client.receive
+        assert_equal "data: payload message\n\n", client.receive
 
         assert_equal 1, redis.publish(channel_name, "another message")
-        assert_equal "event: #{channel_name}\ndata: another message\n\n", client.receive
+        #assert_equal "event: #{channel_name}\ndata: another message\n\n", client.receive
+        assert_equal "data: another message\n\n", client.receive
       end
     end
 
@@ -120,10 +122,12 @@ describe Sinapse::Server do
         redis.publish('sinapse:channels:1:add', 'room:5')
 
         assert_equal 1, redis.publish('room:4', "message for room 4")
-        assert_equal "event: room:4\ndata: message for room 4\n\n", client.receive
+        #assert_equal "event: room:4\ndata: message for room 4\n\n", client.receive
+        assert_equal "data: message for room 4\n\n", client.receive
 
         assert_equal 1, redis.publish('room:5', "message for room 5")
-        assert_equal "event: room:5\ndata: message for room 5\n\n", client.receive
+        #assert_equal "event: room:5\ndata: message for room 5\n\n", client.receive
+        assert_equal "data: message for room 5\n\n", client.receive
 
         assert_equal 0, redis.publish('room:2', "message for room 2")
       end

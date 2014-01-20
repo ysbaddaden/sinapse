@@ -47,9 +47,17 @@ module Sinapse
       def subscribe(env, user, channels)
         EM.synchrony do
           env['redis'].psubscribe("sinapse:channels:#{user}:*") do |on|
-            on.psubscribe { env['redis'].subscribe(*channels) }
-            on.pmessage { |_, channel, message| update_subscriptions(env, message, channel) }
-            on.message { |channel, message| sse(env, message, channel) }
+            on.psubscribe do
+              env['redis'].subscribe(*channels)
+            end
+
+            on.pmessage do |_, channel, message|
+              update_subscriptions(env, message, channel)
+            end
+
+            on.message do |channel, message|
+              sse env, message #, Config.set_channel_event ? channel : nil
+            end
           end
           env['redis'].quit
         end
