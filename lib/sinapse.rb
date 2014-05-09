@@ -4,6 +4,7 @@ require 'sinapse/channels'
 require 'sinapse/publishable'
 require 'connection_pool'
 require 'redis'
+require 'hiredis'
 
 module Sinapse
   def sinapse
