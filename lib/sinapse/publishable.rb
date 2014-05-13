@@ -3,7 +3,7 @@ require 'active_support/core_ext/string/inflections'
 module Sinapse
   module Publishable
     def self.included(klass)
-      klass.alias_method :publish, :sinapse_publish unless klass.respond_to?(:publish)
+      klass.__send__ :alias_method, :publish, :sinapse_publish unless klass.respond_to?(:publish)
     end
 
     def sinapse_publish(message)
