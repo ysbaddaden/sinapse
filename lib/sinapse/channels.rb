@@ -29,6 +29,17 @@ module Sinapse
       end
     end
 
+    # Removes all channels at once.
+    def clear
+      channels.each { |channel| remove_channel(channel) }
+    end
+
+    # Removes all channels and clears authentication.
+    def destroy
+      channels.each { |channel| remove_channel(channel) }
+      auth.clear
+    end
+
     def channel_for(record)
       record.is_a?(String) ? record : record.sinapse_channel
     end

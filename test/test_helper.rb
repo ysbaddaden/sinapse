@@ -2,6 +2,7 @@ $:.unshift File.expand_path("../../lib", File.realpath(__FILE__))
 RACK_ENV ||= ENV['RACK_ENV'] ||= 'test'
 
 require 'bundler/setup'
+
 Bundler.require(:default, RACK_ENV)
 Goliath.env = RACK_ENV
 

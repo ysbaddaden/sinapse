@@ -47,6 +47,22 @@ describe "Sinapse::Channels" do
     refute User.new(2).sinapse.has_channel?(room)
   end
 
+  it "clear" do
+    user.sinapse.clear
+    assert_empty user.sinapse.channels
+  end
+
+  it "destroy" do
+    user.sinapse.destroy
+
+    Sinapse.redis do |redis|
+      assert_nil redis.get(user.sinapse.auth.key)
+      assert_nil redis.get(user.sinapse.auth.token_key('a1b2c3d4e5f6'))
+    end
+
+    assert_empty user.sinapse.channels
+  end
+
   describe "add_channel" do
     let(:room) { Room.new(12345) }
 
