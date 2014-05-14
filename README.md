@@ -81,7 +81,12 @@ The Sinapse server may be configured using environment variables:
 
   - `SINAPSE_CORS_ORIGIN` — restrict origins for CORS browser requests (defaults to `*`).
   - `SINAPSE_KEEP_ALIVE` — send a comment every n seconds to keep the connection alive (defaults to `15`).
-  - `SINAPSE_RETRY` — EventSource retry parameter (defaults to `5`)
+  - `SINAPSE_RETRY` — EventSource retry parameter (defaults to `5`).
+  - `SINAPSE_CHANNEL_EVENT` — set the channel name as the event type to sent messages.
+
+Sinapse (both the client and the server) will connect to the Redis instance
+defined in the `REDIS_URL` environment variable and fallback to the default
+`redis://localhost:6379:0`.
 
 ### Authenticate
 

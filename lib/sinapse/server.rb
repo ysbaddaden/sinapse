@@ -21,7 +21,7 @@ module Sinapse
     end
 
     def response(env)
-      env['redis'] = Redis.new(:driver => :synchrony)
+      env['redis'] = Redis.new(:driver => :synchrony, :url => Sinapse.config[:url])
 
       user, channels = authenticate(env)
       return [401, {}, []] if user.nil? || channels.empty?

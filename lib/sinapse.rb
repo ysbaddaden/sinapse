@@ -27,7 +27,7 @@ module Sinapse
       @config ||= {
         size: 5,
         timeout: 5,
-        url: 'redis://localhost:6379/0'
+        url: ENV['REDIS_URL'] || 'redis://localhost:6379/0'
       }
     end
 
