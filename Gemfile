@@ -4,6 +4,7 @@ gem 'goliath'
 gem 'redis'
 gem 'hiredis'
 gem 'connection_pool'
+gem 'msgpack'
 gem 'activesupport', require: false
 
 platform :rbx do

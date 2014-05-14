@@ -97,11 +97,11 @@ describe Sinapse::Server do
         client.receive # skips authentication message
         wait
 
-        assert_equal 1, redis.publish(channel_name, "payload message")
+        assert_equal 1, publish(channel_name, "payload message")
         #assert_equal "event: #{channel_name}\ndata: payload message\n\n", client.receive
         assert_equal "data: payload message\n\n", client.receive
 
-        assert_equal 1, redis.publish(channel_name, "another message")
+        assert_equal 1, publish(channel_name, "another message")
         #assert_equal "event: #{channel_name}\ndata: another message\n\n", client.receive
         assert_equal "data: another message\n\n", client.receive
       end
@@ -124,15 +124,15 @@ describe Sinapse::Server do
         redis.sadd('sinapse:channels:1', 'room:5')
         redis.publish('sinapse:channels:1:add', 'room:5')
 
-        assert_equal 1, redis.publish('room:4', "message for room 4")
+        assert_equal 1, publish('room:4', "message for room 4")
         #assert_equal "event: room:4\ndata: message for room 4\n\n", client.receive
         assert_equal "data: message for room 4\n\n", client.receive
 
-        assert_equal 1, redis.publish('room:5', "message for room 5")
+        assert_equal 1, publish('room:5', "message for room 5")
         #assert_equal "event: room:5\ndata: message for room 5\n\n", client.receive
         assert_equal "data: message for room 5\n\n", client.receive
 
-        assert_equal 0, redis.publish('room:2', "message for room 2")
+        assert_equal 0, publish('room:2', "message for room 2")
       end
     end
 
@@ -141,8 +141,19 @@ describe Sinapse::Server do
         sse_connect do |client|
           client.receive; wait
 
-          assert_equal 1, redis.publish(channel_name, "payload message")
+          assert_equal 1, publish(channel_name, "payload message")
           assert_equal "event: #{channel_name}\ndata: payload message\n\n", client.receive
+        end
+      end
+    end
+
+    it "publishes with event type" do
+      Sinapse::Config.stub(:channel_event, true) do
+        sse_connect do |client|
+          client.receive; wait
+
+          assert_equal 1, publish(channel_name, "payload message", "hello:world")
+          assert_equal "event: hello:world\ndata: payload message\n\n", client.receive
         end
       end
     end
@@ -169,5 +180,10 @@ describe Sinapse::Server do
         end
       end
     end
+  end
+
+  def publish(channel, message, event = nil)
+    data = MessagePack.pack(event ? [event, message] : message)
+    redis.publish(channel, data)
   end
 end

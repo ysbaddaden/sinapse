@@ -2,6 +2,7 @@ require 'goliath'
 require 'sinapse/config'
 require 'sinapse/keep_alive'
 require 'sinapse/cross_origin_resource_sharing'
+require 'msgpack'
 
 module Sinapse
   class Server < Goliath::API
@@ -56,8 +57,9 @@ module Sinapse
               update_subscriptions(env, message, channel)
             end
 
-            on.message do |channel, message|
-              sse env, message, Config.channel_event ? channel : nil
+            on.message do |channel, data|
+              event, message = unpack(channel, data)
+              sse(env, message, event)
             end
           end
           env['redis'].quit
@@ -67,6 +69,16 @@ module Sinapse
       def update_subscriptions(env, message, channel)
         return env['redis'].subscribe(message)   if channel.end_with?(':add')
         return env['redis'].unsubscribe(message) if channel.end_with?(':remove')
+      end
+
+      def unpack(channel, data)
+        message = MessagePack.unpack(data)
+        if message.is_a?(Array)
+          message
+        else
+          event = Config.channel_event ? channel : nil
+          [event, message]
+        end
       end
 
       def sse(env, data, event = nil, options = {})

@@ -19,4 +19,14 @@ describe "Sinapse::Publishable" do
       publish_until_received { room.publish('hello room 1') }
     end
   end
+
+  it "publish with event type" do
+    EM.run do
+      wait_for_message('room:*') do |channel, message|
+        assert_equal room.sinapse_channel, channel
+        assert_equal ['hello', 'hello room 1'], message
+      end
+      publish_until_received { room.publish('hello room 1', event: 'hello') }
+    end
+  end
 end

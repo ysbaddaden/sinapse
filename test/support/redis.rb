@@ -1,3 +1,5 @@
+require 'msgpack'
+
 module RedisTestHelper
   def redis
     @redis ||= Redis.new(driver: 'synchrony', url: Sinapse.config[:url])
@@ -15,8 +17,12 @@ module RedisTestHelper
   def wait_for_message(pattern)
     EM.synchrony do
       redis.psubscribe(pattern) do |on|
-        on.pmessage do |key, channel, message|
-          yield(channel, message)
+        on.pmessage do |key, channel, data|
+          begin
+            data = MessagePack.unpack(data)
+          rescue MessagePack::MalformedFormatError
+          end
+          yield(channel, data)
           redis.punsubscribe
         end
       end
