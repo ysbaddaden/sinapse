@@ -86,7 +86,7 @@ The Sinapse server may be configured using environment variables:
 
 Sinapse (both the client and the server) will connect to the Redis instance
 defined in the `REDIS_URL` environment variable and fallback to the default
-`redis://localhost:6379:0`.
+`redis://localhost:6379/0`.
 
 ### Authenticate
 
