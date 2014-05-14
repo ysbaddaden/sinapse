@@ -4,7 +4,7 @@ require File.expand_path('../lib/sinapse/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Julien Portalier"]
   gem.email         = ["julien@portalier.com"]
-  gem.description   = gem.summary = "A Ruby EventSource service"
+  gem.description   = gem.summary = "An EventSource push service for Ruby"
   gem.homepage      = "http://github.com/ysbaddaden/sinapse"
   gem.license       = "MIT"
 
