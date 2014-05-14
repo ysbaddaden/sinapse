@@ -1,11 +1,13 @@
 require 'goliath'
+require 'goliath/websocket'
 require 'sinapse/config'
 require 'sinapse/keep_alive'
 require 'sinapse/cross_origin_resource_sharing'
 require 'msgpack'
+require 'json'
 
 module Sinapse
-  class Server < Goliath::API
+  class Server < Goliath::WebSocket
     use Sinapse::Rack::CrossOriginResourceSharing, origin: Sinapse.config.cors_origin
     use Goliath::Rack::Params
     use Goliath::Rack::Heartbeat  # respond to /status with 200, OK (monitoring, etc)
@@ -16,24 +18,42 @@ module Sinapse
       @keep_alive ||= KeepAlive.new
     end
 
-    def on_close(env)
-      close_redis(env['redis']) if env['redis']
-      keep_alive.delete(env)
-    end
-
     def response(env)
       env['redis'] = Redis.new(:driver => :synchrony, :url => Sinapse.config.redis_url)
 
+      if env["HTTP_UPGRADE"] == "websocket"
+        super
+      else
+        user, channels = authenticate(env)
+        return [401, {}, []] if user.nil? || channels.empty?
+
+        EM.next_tick do
+          sse(env, :ok, :authentication, retry: Sinapse.Config.retry)
+          subscribe(env, user, channels)
+          keep_alive << env
+        end
+
+        chunked_streaming_response(200, response_headers(env))
+      end
+    end
+
+    def on_open(env)
       user, channels = authenticate(env)
-      return [401, {}, []] if user.nil? || channels.empty?
+      return env.handler.close_websocket if user.nil? || channels.empty?
 
       EM.next_tick do
-        sse(env, :ok, :authentication, retry: Sinapse.config.retry)
+        ws(env, :ok, :authentication)
         subscribe(env, user, channels)
-        keep_alive << env
       end
+    end
 
-      chunked_streaming_response(200, response_headers(env))
+    def on_close(env)
+      close_redis(env['redis']) if env['redis']
+      keep_alive.delete(env) unless env['handler']
+    end
+
+    def on_error(env, error)
+      env.logger.debug "ERROR: #{error}"
     end
 
     private
@@ -59,7 +79,7 @@ module Sinapse
 
             on.message do |channel, data|
               event, message = unpack(channel, data)
-              sse(env, message, event)
+              push(env, message, event)
             end
           end
           env['redis'].quit
@@ -78,6 +98,22 @@ module Sinapse
         else
           event = Sinapse.config.channel_event ? channel : nil
           [event, message]
+        end
+      end
+
+      def push(env, message, event = nil)
+        if env['handler']
+          ws(env, message, event)
+        else
+          sse(env, message, event)
+        end
+      end
+
+      def ws(env, data, event)
+        if event
+          env.handler.send_text_frame({ event: event, data: data }.to_json)
+        else
+          env.handler.send_text_frame(data)
         end
       end
 

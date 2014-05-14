@@ -5,6 +5,11 @@ module RedisTestHelper
     @redis ||= Redis.new(driver: 'synchrony', url: Sinapse.config.redis_url)
   end
 
+  def publish(channel, message, event = nil)
+    data = MessagePack.pack(event ? [event, message] : message)
+    redis.publish(channel, data)
+  end
+
   def publish_until_received
     EM.next_tick do
       notify = lambda do
