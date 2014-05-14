@@ -22,7 +22,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'redis', '>= 3.0.6'
   gem.add_dependency 'hiredis'
   gem.add_dependency 'connection_pool'
-  gem.add_dependency 'msgpack', '>= 5.0.0'
+  gem.add_dependency 'msgpack', '>= 0.5.0'
   gem.add_dependency 'activesupport', '>= 3.0.0'
 
   gem.add_development_dependency 'bundler'

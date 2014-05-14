@@ -1,11 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'goliath'
-gem 'redis'
-gem 'hiredis'
-gem 'connection_pool'
-gem 'msgpack'
-gem 'activesupport', require: false
+gemspec
 
 platform :rbx do
   gem 'rubysl-securerandom'
@@ -19,11 +14,4 @@ platform :rbx do
     gem 'rubysl-base64'     # required by em-http-request
     gem 'rubysl-mutex_m'    # required by minitest 5.2
   end
-end
-
-group :test do
-  gem 'rake'
-  gem 'em-http-request'
-  gem 'minitest', require: 'minitest/autorun'
-  gem 'minitest-reporters'
 end

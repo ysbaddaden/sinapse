@@ -1,9 +1,23 @@
+PATH
+  remote: .
+  specs:
+    sinapse (0.0.1)
+      activesupport (>= 3.0.0)
+      connection_pool
+      goliath (>= 1.0.3)
+      hiredis
+      msgpack (>= 0.5.0)
+      redis (>= 3.0.6)
+
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (3.2.16)
-      i18n (~> 0.6, >= 0.6.4)
-      multi_json (~> 1.0)
+    activesupport (4.1.0)
+      i18n (~> 0.6, >= 0.6.9)
+      json (~> 1.7, >= 1.7.7)
+      minitest (~> 5.1)
+      thread_safe (~> 0.1)
+      tzinfo (~> 1.1)
     addressable (2.3.5)
     ansi (1.4.3)
     async-rack (0.5.1)
@@ -40,6 +54,7 @@ GEM
     hiredis (0.4.5)
     http_parser.rb (0.6.0.beta.2)
     i18n (0.6.9)
+    json (1.8.1)
     log4r (1.1.10)
     minitest (5.2.0)
     minitest-reporters (1.0.0)
@@ -48,7 +63,7 @@ GEM
       minitest (>= 5.0)
       powerbar
     msgpack (0.5.8)
-    multi_json (1.8.2)
+    multi_json (1.10.0)
     powerbar (1.0.11)
       ansi (~> 1.4.0)
       hashie (>= 1.1.0)
@@ -59,29 +74,28 @@ GEM
     rack-respond_to (0.9.8)
       rack-accept-media-types (>= 0.6)
     rake (10.1.1)
-    redis (3.0.6)
+    redis (3.0.7)
     rubysl-base64 (2.0.0)
     rubysl-mutex_m (2.0.0)
     rubysl-prettyprint (2.0.2)
     rubysl-securerandom (2.0.0)
     rubysl-singleton (2.0.0)
+    thread_safe (0.3.3)
+    tzinfo (1.1.0)
+      thread_safe (~> 0.1)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  activesupport
-  connection_pool
+  bundler
   em-http-request
-  goliath
-  hiredis
-  minitest
+  minitest (>= 5.2.0)
   minitest-reporters
-  msgpack
   rake
-  redis
   rubysl-base64
   rubysl-mutex_m
   rubysl-prettyprint
   rubysl-securerandom
   rubysl-singleton
+  sinapse!

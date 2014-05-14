@@ -2,11 +2,11 @@ $:.unshift File.expand_path("../../lib", File.realpath(__FILE__))
 RACK_ENV ||= ENV['RACK_ENV'] ||= 'test'
 
 require 'bundler/setup'
-
-Bundler.require(:default, RACK_ENV)
-Goliath.env = RACK_ENV
-
+require 'minitest/autorun'
+require 'minitest/reporters'
 require 'sinapse'
+require 'sinapse/server'
+
 require_relative 'support/redis'
 require_relative 'support/timeout'
 require_relative 'support/goliath'

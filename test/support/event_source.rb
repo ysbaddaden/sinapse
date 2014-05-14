@@ -1,3 +1,5 @@
+require 'em-http-request'
+
 module Goliath
   module TestHelper
     class EventSourceHelper
