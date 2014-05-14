@@ -1,4 +1,5 @@
 require 'active_support/core_ext/string/inflections'
+require 'msgpack'
 
 module Sinapse
   module Publishable
