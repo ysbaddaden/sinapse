@@ -14,6 +14,10 @@ module Sinapse
       default(:SINAPSE_CORS_ORIGIN, '*')
     end
 
+    def channel_event
+      !ENV["SINAPSE_CHANNEL_EVENT"].nil?
+    end
+
     private
 
       def default(name, default_value)

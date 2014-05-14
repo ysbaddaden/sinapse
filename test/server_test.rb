@@ -87,12 +87,15 @@ describe Sinapse::Server do
   describe "pub/sub" do
     let(:channel_name) { 'user:1' }
 
+    # waits for server to be listening
+    def wait
+      sleep 0.001 until redis.publish('sinapse:channels:1:wait', nil) == 1
+    end
+
     it "proxies published messages" do
       sse_connect do |client|
         client.receive # skips authentication message
-
-        # waiting for server to be listening
-        sleep 0.001 until redis.publish('sinapse:channels:1:wait', nil) == 1
+        wait
 
         assert_equal 1, redis.publish(channel_name, "payload message")
         #assert_equal "event: #{channel_name}\ndata: payload message\n\n", client.receive
@@ -132,13 +135,24 @@ describe Sinapse::Server do
         assert_equal 0, redis.publish('room:2', "message for room 2")
       end
     end
+
+    it "sets channel name as event type" do
+      Sinapse::Config.stub(:channel_event, true) do
+        sse_connect do |client|
+          client.receive; wait
+
+          assert_equal 1, redis.publish(channel_name, "payload message")
+          assert_equal "event: #{channel_name}\ndata: payload message\n\n", client.receive
+        end
+      end
+    end
   end
 
   describe "retry" do
     it "uses configured value" do
       Sinapse::Config.stub(:retry, 12000) do
         sse_connect(head: { origin: 'http://example.com' }) do |client|
-          assert_match /retry: 12000\n/, client.receive
+          assert_match(/retry: 12000\n/, client.receive)
         end
       end
     end

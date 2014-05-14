@@ -57,7 +57,7 @@ module Sinapse
             end
 
             on.message do |channel, message|
-              sse env, message #, Config.set_channel_event ? channel : nil
+              sse env, message, Config.channel_event ? channel : nil
             end
           end
           env['redis'].quit
