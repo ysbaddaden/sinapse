@@ -1,26 +1,42 @@
 # Sinapse
 
-Ruby EventSource service for PUB/SUB delivery.
+EventSource service for pushing messages written in Ruby.
 
-Sending messages from the server to a client should be as easy as sending
-messages from the browser to the server. The technology is there (eg: pub/sub,
-event loops, EventSource); a full featured Ruby solution wasn't. Hence Sinapse.
+Pushing messages to the browser or any other kind or client should be as easy as
+posting from a browser. The technology is there with the PUB/SUB solution
+offered by Redis and the simple server push protocol allowed by EventSource
+(Server-Sent Events) over regular HTTP.
 
-This is still a work in progress. The library API shouldn't change much, yet
-it's allowed to change and break at any time.
+Sinapse is a push service running in an event-loop (thanks to Goliath and
+EventMachine) and takes care of pushing all your events, and to deliver them to
+whoever is allowed to receive them.
+
+
+## How it works
+
+A user connects to the Sinapse server using a token. That token will be
+associated to a list of channels that the user is authorized to listen to. That
+list of channels can be updated at any time and will be applied live to existing
+connection, so users will only ever receive what they are allowed to receive.
+
+This is different from [Faye](http://faye.jcoglan.com) for example, which is
+a PUB/SUB solution to have clients subscribe and publish to whatever channels
+they want. Sinapse is a push service to notify clients about changes that
+happened on the backend, and the list of authorized channels is thus kept on
+the server.
 
 
 ## Features
 
-Sinapse is currently in alpha state, but already provides a nice set of
-features:
+Sinapse is still a work in progress, and the API subject to changes, but it
+already features:
 
-- Solid architecture: Goliath + EventMachine + Redis.
+- A solid architecture (Goliath + EventMachine + Redis).
 - EventSource (Server-Sent Events) server with support for CORS requests,
   authentication and a live updating list of channels.
+- Keep EventSource connection alive by sending comments are regular intervals.
 - Ruby library to manipulate user channels, authentication and to publish
   messages.
-- Keep EventSource connection alive by sending comments are regular intervals.
 
 TODO:
 
