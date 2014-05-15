@@ -29,12 +29,12 @@ describe "Sinapse::Server::WebSocket" do
   describe "authentication" do
     it "sends an ok message on success" do
       ws_connect("valid") do |client|
-        assert_equal "connected: ok", client.receive.data
+        assert_equal "authentication: ok", client.receive.data
       end
     end
 
     # it "fails handshake with 401 status code for unknown token" do
-    #   TODO: how to test that?
+    #   TODO: how to test?
     # end
   end
 

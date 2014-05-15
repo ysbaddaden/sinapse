@@ -42,7 +42,7 @@ module Sinapse
         subscribe(env)
 
         EM.next_tick do
-          ws(env, "connected: ok")
+          ws(env, "authentication: ok")
         end
       end
     end
