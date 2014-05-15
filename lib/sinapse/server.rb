@@ -21,15 +21,15 @@ module Sinapse
     def response(env)
       env['redis'] = Redis.new(:driver => :synchrony, :url => Sinapse.config.redis_url)
 
+      authenticate(env)
+      return [401, {}, []] if env["sinapse.user"].nil? || env["sinapse.channels"].empty?
+
       if env["HTTP_UPGRADE"] == "websocket"
         super
       else
-        user, channels = authenticate(env)
-        return [401, {}, []] if user.nil? || channels.empty?
-
         EM.next_tick do
           sse(env, :ok, :authentication, retry: Sinapse.Config.retry)
-          subscribe(env, user, channels)
+          subscribe(env)
           keep_alive << env
         end
 
@@ -38,12 +38,12 @@ module Sinapse
     end
 
     def on_open(env)
-      user, channels = authenticate(env)
-      return env.handler.close_websocket if user.nil? || channels.empty?
-
       EM.next_tick do
-        ws(env, :ok, :authentication)
-        subscribe(env, user, channels)
+        subscribe(env)
+
+        EM.next_tick do
+          ws(env, "connected: ok")
+        end
       end
     end
 
@@ -61,12 +61,14 @@ module Sinapse
       def authenticate(env)
         user = env['redis'].get("sinapse:tokens:#{params['access_token']}")
         if user
-          channels = env['redis'].smembers("sinapse:channels:#{user}")
-          [user, channels]
+          env["sinapse.user"] = user
+          env["sinapse.channels"] = env['redis'].smembers("sinapse:channels:#{user}")
         end
       end
 
-      def subscribe(env, user, channels)
+      def subscribe(env)
+        user, channels = env["sinapse.user"], env["sinapse.channels"]
+
         EM.synchrony do
           env['redis'].psubscribe("sinapse:channels:#{user}:*") do |on|
             on.psubscribe do
@@ -109,7 +111,7 @@ module Sinapse
         end
       end
 
-      def ws(env, data, event)
+      def ws(env, data, event = nil)
         if event
           env.handler.send_text_frame({ event: event, data: data }.to_json)
         else
