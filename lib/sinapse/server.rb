@@ -4,7 +4,6 @@ require 'sinapse/config'
 require 'sinapse/keep_alive'
 require 'sinapse/cross_origin_resource_sharing'
 require 'msgpack'
-require 'json'
 
 module Sinapse
   class Server < Goliath::WebSocket
@@ -105,18 +104,14 @@ module Sinapse
 
       def push(env, message, event = nil)
         if env['handler']
-          ws(env, message, event)
+          ws(env, message)
         else
           sse(env, message, event)
         end
       end
 
-      def ws(env, data, event = nil)
-        if event
-          env.handler.send_text_frame({ event: event, data: data }.to_json)
-        else
-          env.handler.send_text_frame(data)
-        end
+      def ws(env, data)
+        env.handler.send_text_frame(data)
       end
 
       def sse(env, data, event = nil, options = {})
