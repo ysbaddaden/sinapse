@@ -6,7 +6,6 @@ PATH
       connection_pool
       goliath (>= 1.0.4)
       hiredis
-      json
       msgpack (>= 0.5.0)
       redis (>= 3.0.6)
 

@@ -23,7 +23,6 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'hiredis'
   gem.add_dependency 'connection_pool'
   gem.add_dependency 'msgpack', '>= 0.5.0'
-  gem.add_dependency 'json'
   gem.add_dependency 'activesupport', '>= 3.0.0'
 
   gem.add_development_dependency 'bundler'
