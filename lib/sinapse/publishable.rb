@@ -4,7 +4,9 @@ require 'msgpack'
 module Sinapse
   module Publishable
     def self.included(klass)
-      klass.__send__ :alias_method, :publish, :sinapse_publish unless klass.respond_to?(:publish)
+      unless klass.method_defined?(:publish)
+        klass.__send__(:define_method, :publish) { |*args| sinapse_publish(*args) }
+      end
     end
 
     def sinapse_publish(message, options = nil)
