@@ -13,6 +13,10 @@ module Sinapse
         sinapse_publish_orig(message, options)
       end
     end
+
+    def publish(*args)
+      sinapse_publish(*args)
+    end
   end
 
   module Testing
