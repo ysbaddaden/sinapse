@@ -3,16 +3,12 @@ require 'msgpack'
 
 module Sinapse
   module Publishable
-    def self.included(klass)
-      unless klass.method_defined?(:publish)
-        klass.__send__(:define_method, :publish) { |*args| sinapse_publish(*args) }
-      end
-    end
-
     def sinapse_publish(message, options = nil)
       data = Publishable.pack(message, options)
       Sinapse.redis { |redis| redis.publish(sinapse_channel, data) }
     end
+
+    alias_method :publish, :sinapse_publish
 
     def sinapse_channel
       [self.class.name.underscore.singularize, self.to_param].join(':')
