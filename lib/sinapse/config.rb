@@ -18,6 +18,10 @@ module Sinapse
       !ENV["SINAPSE_CHANNEL_EVENT"].nil?
     end
 
+    def libcurl
+      !ENV["SINAPSE_LIBCURL"].nil?
+    end
+
     private
 
       def default(name, default_value)
