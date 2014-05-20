@@ -16,6 +16,7 @@ describe "Sinapse::Testing" do
       room.publish('hello room 1', event: "event_name")
     end
 
+    assert_equal room.sinapse_channel, Sinapse.messages.last[:channel]
     assert_equal "event_name", Sinapse.messages.last[:event]
     assert_equal "hello room 1", Sinapse.messages.last[:message]
 

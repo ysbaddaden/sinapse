@@ -8,7 +8,7 @@ module Sinapse
 
     def sinapse_publish(message, options = {})
       if Sinapse::Testing.enabled?
-        Sinapse.messages << { message: message, event: options[:event] }
+        Sinapse.messages << { channel: sinapse_channel, message: message, event: options[:event] }
       else
         sinapse_publish_orig(message, options)
       end
