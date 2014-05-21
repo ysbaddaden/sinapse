@@ -14,7 +14,14 @@ module Sinapse
   class << self
     def redis(&block)
       raise ArgumentError, "requires a block" unless block
-      @redis ||= ConnectionPool.new(pool_options) { Redis.new(url: config[:url]) }
+      @redis ||= ConnectionPool.new(pool_options) do
+        Redis.new(
+          host:     config[:uri].host,
+          port:     config[:uri].port,
+          password: config[:uri].password
+        )
+      end
+
       @redis.with(&block)
     end
 
@@ -27,7 +34,7 @@ module Sinapse
       @config ||= {
         size: 5,
         timeout: 5,
-        url: ENV['REDIS_URL'] || 'redis://localhost:6379/0'
+        uri: URI.parse(ENV['REDIS_URL'] || 'redis://localhost:6379/0')
       }
     end
 

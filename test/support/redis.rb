@@ -2,7 +2,12 @@ require 'msgpack'
 
 module RedisTestHelper
   def redis
-    @redis ||= Redis.new(driver: 'synchrony', url: Sinapse.config[:url])
+    @redis ||= Redis.new(
+      driver:   :synchrony,
+      host:     Sinapse.config[:uri].host,
+      port:     Sinapse.config[:uri].port,
+      password: Sinapse.config[:uri].password
+    )
   end
 
   def publish_until_received
