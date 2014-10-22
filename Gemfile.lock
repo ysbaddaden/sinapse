@@ -38,6 +38,9 @@ GEM
     em-websocket (0.3.8)
       addressable (>= 2.1.1)
       eventmachine (>= 0.12.9)
+    em-websocket-client (0.1.2)
+      eventmachine
+      websocket
     eventmachine (1.0.3)
     goliath (1.0.4)
       async-rack
@@ -83,6 +86,7 @@ GEM
     thread_safe (0.3.4)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
+    websocket (1.1.4)
 
 PLATFORMS
   ruby
@@ -90,6 +94,7 @@ PLATFORMS
 DEPENDENCIES
   bundler
   em-http-request
+  em-websocket-client
   minitest (>= 5.2.0)
   minitest-reporters
   rake

@@ -1,4 +1,5 @@
 require 'goliath'
+require 'goliath/websocket'
 require 'sinapse/config'
 require 'sinapse/keep_alive'
 require 'sinapse/cross_origin_resource_sharing'
@@ -7,7 +8,7 @@ require 'redis'
 require 'hiredis'
 
 module Sinapse
-  class Server < Goliath::API
+  class Server < Goliath::WebSocket
     use Sinapse::Rack::CrossOriginResourceSharing, origin: Sinapse.config.cors_origin
     use Goliath::Rack::Params
     use Goliath::Rack::Heartbeat  # respond to /status with 200, OK (monitoring, etc)
@@ -18,24 +19,43 @@ module Sinapse
       @keep_alive ||= KeepAlive.new
     end
 
+    def response(env)
+      env['redis'] = Redis.new(:driver => :synchrony, :url => Sinapse.config.redis_url)
+
+      authenticate(env)
+      return [401, {}, []] if env["sinapse.user"].nil? || env["sinapse.channels"].empty?
+
+      if env["HTTP_UPGRADE"] == "websocket"
+        super
+      else
+        EM.next_tick do
+          sse(env, :ok, :authentication, retry: Sinapse.config.retry)
+          subscribe(env)
+          keep_alive << env
+        end
+
+        chunked_streaming_response(200, response_headers(env))
+      end
+    end
+
+    def on_open(env)
+      EM.next_tick do
+        subscribe(env)
+
+        EM.next_tick do
+          ws(env, "authentication: ok")
+          keep_alive << env
+        end
+      end
+    end
+
     def on_close(env)
       close_redis(env['redis']) if env['redis']
       keep_alive.delete(env)
     end
 
-    def response(env)
-      env['redis'] = Redis.new(:driver => :synchrony, :url => Sinapse.config.redis_url)
-
-      user, channels = authenticate(env)
-      return [401, {}, []] if user.nil? || channels.empty?
-
-      EM.next_tick do
-        sse(env, :ok, :authentication, retry: Sinapse.config.retry)
-        subscribe(env, user, channels)
-        keep_alive << env
-      end
-
-      chunked_streaming_response(200, response_headers(env))
+    def on_error(env, error)
+      env.logger.debug "ERROR: #{error}"
     end
 
     private
@@ -43,12 +63,14 @@ module Sinapse
       def authenticate(env)
         user = env['redis'].get("sinapse:tokens:#{params['access_token']}")
         if user
-          channels = env['redis'].smembers("sinapse:channels:#{user}")
-          [user, channels]
+          env["sinapse.user"] = user
+          env["sinapse.channels"] = env['redis'].smembers("sinapse:channels:#{user}")
         end
       end
 
-      def subscribe(env, user, channels)
+      def subscribe(env)
+        user, channels = env["sinapse.user"], env["sinapse.channels"]
+
         EM.synchrony do
           env['redis'].psubscribe("sinapse:channels:#{user}:*") do |on|
             on.psubscribe do
@@ -61,7 +83,7 @@ module Sinapse
 
             on.message do |channel, data|
               event, message = unpack(channel, data)
-              sse(env, message, event)
+              push(env, message, event)
             end
           end
           env['redis'].quit
@@ -81,6 +103,18 @@ module Sinapse
           event = Sinapse.config.channel_event ? channel : nil
           [event, message]
         end
+      end
+
+      def push(env, message, event = nil)
+        if env['handler']
+          ws(env, message)
+        else
+          sse(env, message, event)
+        end
+      end
+
+      def ws(env, data)
+        env.handler.send_text_frame(data)
       end
 
       def sse(env, data, event = nil, options = {})

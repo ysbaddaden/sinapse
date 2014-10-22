@@ -18,7 +18,13 @@ module Sinapse
 
       def start
         EM.add_periodic_timer(Sinapse.config.keep_alive) do
-          @queue.each { |env| env.chunked_stream_send ":\n" }
+          @queue.each do |env|
+            if env['handler']
+              env.handler.send_frame(:ping, "") if env.handler.pingable?
+            else
+              env.chunked_stream_send ":\n"
+            end
+          end
         end
       end
   end

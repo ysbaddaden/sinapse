@@ -98,11 +98,9 @@ describe Sinapse::Server do
         wait
 
         assert_equal 1, publish(channel_name, "payload message")
-        #assert_equal "event: #{channel_name}\ndata: payload message\n\n", client.receive
         assert_equal "data: payload message\n\n", client.receive
 
         assert_equal 1, publish(channel_name, "another message")
-        #assert_equal "event: #{channel_name}\ndata: another message\n\n", client.receive
         assert_equal "data: another message\n\n", client.receive
       end
     end
@@ -180,10 +178,5 @@ describe Sinapse::Server do
         end
       end
     end
-  end
-
-  def publish(channel, message, event = nil)
-    data = MessagePack.pack(event ? [event, message] : message)
-    redis.publish(channel, data)
   end
 end
