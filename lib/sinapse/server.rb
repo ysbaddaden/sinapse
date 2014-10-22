@@ -6,7 +6,7 @@ require 'msgpack'
 
 module Sinapse
   class Server < Goliath::API
-    use Sinapse::Rack::CrossOriginResourceSharing, origin: Config.cors_origin
+    use Sinapse::Rack::CrossOriginResourceSharing, origin: Sinapse.config.cors_origin
     use Goliath::Rack::Params
     use Goliath::Rack::Heartbeat  # respond to /status with 200, OK (monitoring, etc)
     use Goliath::Rack::Validation::RequestMethod, %w(GET POST)
@@ -22,13 +22,13 @@ module Sinapse
     end
 
     def response(env)
-      env['redis'] = Redis.new(:driver => :synchrony, :url => Sinapse.config[:url])
+      env['redis'] = Redis.new(:driver => :synchrony, :url => Sinapse.config.redis_url)
 
       user, channels = authenticate(env)
       return [401, {}, []] if user.nil? || channels.empty?
 
       EM.next_tick do
-        sse(env, :ok, :authentication, retry: Config.retry)
+        sse(env, :ok, :authentication, retry: Sinapse.config.retry)
         subscribe(env, user, channels)
         keep_alive << env
       end
@@ -76,7 +76,7 @@ module Sinapse
         if message.is_a?(Array)
           message
         else
-          event = Config.channel_event ? channel : nil
+          event = Sinapse.config.channel_event ? channel : nil
           [event, message]
         end
       end

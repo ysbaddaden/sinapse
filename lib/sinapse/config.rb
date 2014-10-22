@@ -1,31 +1,20 @@
 module Sinapse
-  module Config
-    extend self
+  class Config
+    attr_accessor :retry, :keep_alive, :cors_origin, :channel_event
+    attr_accessor :redis_url, :redis_pool_options
 
-    def retry
-      default(:SINAPSE_RETRY, 5).to_i * 1000
+    def initialize
+      self.retry = ENV.fetch('SINAPSE_RETRY', 5) * 1000
+      self.keep_alive = ENV.fetch('SINAPSE_KEEP_ALIVE', 15)
+      self.cors_origin = ENV.fetch('SINAPSE_CORS_ORIGIN', '*')
+      self.channel_event = !ENV["SINAPSE_CHANNEL_EVENT"].nil?
+
+      self.redis_url = ENV.fetch('REDIS_URL', 'redis://localhost:6379/0')
+      self.redis_pool_options = { size: 5, timeout: 5 }
     end
+  end
 
-    def keep_alive
-      default(:SINAPSE_KEEP_ALIVE, 15).to_i
-    end
-
-    def cors_origin
-      default(:SINAPSE_CORS_ORIGIN, '*')
-    end
-
-    def channel_event
-      !ENV["SINAPSE_CHANNEL_EVENT"].nil?
-    end
-
-    private
-
-      def default(name, default_value)
-        if ENV.has_key?(name.to_s)
-          ENV[name.to_s]
-        else
-          default_value.to_s
-        end
-      end
+  def self.config
+    @@config ||= Config.new
   end
 end

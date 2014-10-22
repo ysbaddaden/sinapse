@@ -17,7 +17,7 @@ module Sinapse
     protected
 
       def start
-        EM.add_periodic_timer(Config.keep_alive) do
+        EM.add_periodic_timer(Sinapse.config.keep_alive) do
           @queue.each { |env| env.chunked_stream_send ":\n" }
         end
       end

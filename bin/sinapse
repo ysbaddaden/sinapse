@@ -6,5 +6,76 @@ RACK_ENV ||= ENV['RACK_ENV'] ||= 'development'
 require 'bundler/setup'
 Bundler.require(:default, RACK_ENV)
 
+require 'goliath'
+require 'sinapse/config'
+
+class Goliath::Runner
+  def options_parser
+    @options ||= {
+      :address => Goliath::Server::DEFAULT_ADDRESS,
+      :port => Goliath::Server::DEFAULT_PORT,
+
+      :daemonize => false,
+      :verbose => false,
+      :log_stdout => true,
+      :env => Goliath::DEFAULT_ENV
+    }
+
+    @options_parser ||= OptionParser.new do |opts|
+      opts.banner = "Usage: sinapse [options]"
+
+      opts.separator ""
+      opts.separator "Options:"
+      opts.on('-o', '--origin ORIGIN', "Allowed origin for CORS requests (default: #{Sinapse.config.cors_origin})") { |val| Sinapse.config.cors_origin = val }
+      opts.on('-k', '--keep-alive SECONDS', "Ping interval to keep the connection alive (default: #{Sinapse.config.keep_alive})") { |val| Sinapse.config.keep_alive = val.to_i }
+      opts.on('-r', '--retry SECONDS', "Retry hint for EventSource connections (default: #{Sinapse.config.retry})") { |val| Sinapse.config.retry = val.to_i * 1000 }
+      opts.on('--redis URL', "Redis URL to connect to (default: #{Sinapse.config.redis_url})") { |val| Sinapse.config.redis_url = val }
+      opts.on('--channel-event', "Set channel name as EventSource event name (default: #{Sinapse.config.channel_event})") { |val| Sinapse.config.channel_event = true }
+
+      opts.separator ""
+      opts.separator "Server options:"
+
+      # The environment isn't set as part of this option parsing routine, but
+      # we'll leave the flag here so a call to --help shows it correctly.
+      opts.on('-e', '--environment NAME', "Set the execution environment (default: #{@options[:env]})") { |val| @options[:env] = val }
+
+      opts.on('-a', '--address HOST', "Bind to HOST address (default: #{@options[:address]})") { |addr| @options[:address] = addr }
+      opts.on('-p', '--port PORT', "Use PORT (default: #{@options[:port]})") { |port| @options[:port] = port.to_i }
+      opts.on('-S', '--socket FILE', "Bind to unix domain socket") { |v| @options[:address] = v; @options[:port] = nil }
+
+      opts.separator ""
+      opts.separator "Daemon options:"
+
+      opts.on('-u', '--user USER', "Run as specified user") {|v| @options[:user] = v }
+      #opts.on('-c', '--config FILE', "Config file (default: ./config/<server>.rb)") { |v| @options[:config] = v }
+      opts.on('-d', '--daemonize', "Run daemonized in the background (default: #{@options[:daemonize]})") { |v| @options[:daemonize] = v }
+      opts.on('-l', '--log FILE', "Log to file (default: off)") { |file| @options[:log_file] = file }
+      opts.on('-s', '--stdout', "Log to stdout (default: #{@options[:log_stdout]})") { |v| @options[:log_stdout] = v }
+      opts.on('-P', '--pid FILE', "Pid file (default: off)") { |file| @options[:pid_file] = file }
+
+      opts.separator ""
+      opts.separator "SSL options:"
+      opts.on('--ssl', 'Enables SSL (default: off)') {|v| @options[:ssl] = v }
+      opts.on('--ssl-key FILE', 'Path to private key') {|v| @options[:ssl_key] = v }
+      opts.on('--ssl-cert FILE', 'Path to certificate') {|v| @options[:ssl_cert] = v }
+      opts.on('--ssl-verify', 'Enables SSL certificate verification') {|v| @options[:ssl_verify] = v }
+
+      opts.separator ""
+      opts.separator "Common options:"
+
+      #opts.on('-C', '--console', 'Start a console') { @options[:console] = true }
+      opts.on('-v', '--verbose', "Enable verbose logging (default: #{@options[:verbose]})") { |v| @options[:verbose] = v }
+      opts.on('-h', '--help', 'Display help message') { show_options(opts) }
+    end
+  end
+end
+
+Goliath.run_app_on_exit = false
+runner = Goliath::Runner.new(ARGV, nil)
+
 require 'sinapse/server'
+runner.api = Sinapse::Server.new(runner)
+runner.app = Goliath::Rack::Builder.build(Sinapse::Server, runner.api)
+runner.load_plugins(Sinapse::Server.plugins)
+runner.run
 

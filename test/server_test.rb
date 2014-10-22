@@ -137,7 +137,7 @@ describe Sinapse::Server do
     end
 
     it "sets channel name as event type" do
-      Sinapse::Config.stub(:channel_event, true) do
+      Sinapse.config.stub(:channel_event, true) do
         sse_connect do |client|
           client.receive; wait
 
@@ -148,7 +148,7 @@ describe Sinapse::Server do
     end
 
     it "publishes with event type" do
-      Sinapse::Config.stub(:channel_event, true) do
+      Sinapse.config.stub(:channel_event, true) do
         sse_connect do |client|
           client.receive; wait
 
@@ -161,7 +161,7 @@ describe Sinapse::Server do
 
   describe "retry" do
     it "uses configured value" do
-      Sinapse::Config.stub(:retry, 12000) do
+      Sinapse.config.stub(:retry, 12000) do
         sse_connect(head: { origin: 'http://example.com' }) do |client|
           assert_match(/retry: 12000\n/, client.receive)
         end
@@ -171,7 +171,7 @@ describe Sinapse::Server do
 
   describe "keep alive" do
     it "periodically sends a comment" do
-      Sinapse::Config.stub(:keep_alive, 0.001) do
+      Sinapse.config.stub(:keep_alive, 0.001) do
         sse_connect do |client|
           client.receive # skips authentication message
           assert_equal ":\n", client.receive
