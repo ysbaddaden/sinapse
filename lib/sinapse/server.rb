@@ -3,6 +3,8 @@ require 'sinapse/config'
 require 'sinapse/keep_alive'
 require 'sinapse/cross_origin_resource_sharing'
 require 'msgpack'
+require 'redis'
+require 'hiredis'
 
 module Sinapse
   class Server < Goliath::API
