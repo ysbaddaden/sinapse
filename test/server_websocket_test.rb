@@ -54,7 +54,7 @@ describe "Sinapse::Server::WebSocket" do
     end
 
     it "won't set channel name as event type" do
-      Sinapse::Config.stub(:channel_event, true) do
+      Sinapse.config.stub(:channel_event, true) do
         ws_connect("valid") do |client|
           client.receive
           assert_equal 1, publish(channel_name, "payload message")
@@ -64,12 +64,10 @@ describe "Sinapse::Server::WebSocket" do
     end
 
     it "discards specified event type" do
-      Sinapse::Config.stub(:channel_event, true) do
-        ws_connect("valid") do |client|
-          client.receive
-          assert_equal 1, publish(channel_name, "payload", "hello:world")
-          assert_equal("payload", client.receive.data)
-        end
+      ws_connect("valid") do |client|
+        client.receive
+        assert_equal 1, publish(channel_name, "payload", "hello:world")
+        assert_equal("payload", client.receive.data)
       end
     end
   end

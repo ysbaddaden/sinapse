@@ -42,6 +42,7 @@ module Sinapse
 
         EM.next_tick do
           ws(env, "authentication: ok")
+          keep_alive << env
         end
       end
     end
