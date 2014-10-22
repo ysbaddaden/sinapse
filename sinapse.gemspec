@@ -18,7 +18,7 @@ Gem::Specification.new do |gem|
   gem.cert_chain    = ['certs/ysbaddaden.pem']
   gem.signing_key   = File.expand_path('~/.ssh/gem-private_key.pem') if $0 =~ /gem\z/
 
-  gem.add_dependency 'goliath', '>= 1.0.3'
+  gem.add_dependency 'goliath', '>= 1.0.4'
   gem.add_dependency 'redis', '>= 3.0.6'
   gem.add_dependency 'hiredis'
   gem.add_dependency 'connection_pool'
