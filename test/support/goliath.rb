@@ -1,6 +1,8 @@
 require 'goliath/test_helper'
+require 'goliath/test_helper_ws'
 
 Goliath.env = RACK_ENV
+WebSocket.should_raise = true
 
 module Goliath
   module TestHelper

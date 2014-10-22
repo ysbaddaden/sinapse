@@ -1,6 +1,5 @@
 require 'test_helper'
 require 'sinapse/server'
-require 'goliath/test_helper_ws'
 
 describe "Sinapse::Server::WebSocket" do
   include Goliath::TestHelper
@@ -33,9 +32,11 @@ describe "Sinapse::Server::WebSocket" do
       end
     end
 
-    # it "fails handshake with 401 status code for unknown token" do
-    #   TODO: how to test?
-    # end
+    it "fails handshake with 401 status code for unknown token" do
+      assert_raises(WebSocket::Error::Handshake::InvalidStatusCode) do
+        ws_connect("invalid")
+      end
+    end
   end
 
   describe "push" do
@@ -68,6 +69,17 @@ describe "Sinapse::Server::WebSocket" do
         client.receive
         assert_equal 1, publish(channel_name, "payload", "hello:world")
         assert_equal("payload", client.receive.data)
+      end
+    end
+  end
+
+  it "periodically pings the socket" do
+    Sinapse.config.stub(:keep_alive, 0.001) do
+      ws_connect("valid") do |client|
+        client.receive # skip authentication
+        assert_equal :ping, client.receive.type
+        assert_equal :ping, client.receive.type
+        assert_equal :ping, client.receive.type
       end
     end
   end

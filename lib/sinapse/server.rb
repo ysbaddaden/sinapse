@@ -4,6 +4,8 @@ require 'sinapse/config'
 require 'sinapse/keep_alive'
 require 'sinapse/cross_origin_resource_sharing'
 require 'msgpack'
+require 'redis'
+require 'hiredis'
 
 module Sinapse
   class Server < Goliath::WebSocket
@@ -27,7 +29,7 @@ module Sinapse
         super
       else
         EM.next_tick do
-          sse(env, :ok, :authentication, retry: Sinapse.Config.retry)
+          sse(env, :ok, :authentication, retry: Sinapse.config.retry)
           subscribe(env)
           keep_alive << env
         end
@@ -49,7 +51,7 @@ module Sinapse
 
     def on_close(env)
       close_redis(env['redis']) if env['redis']
-      keep_alive.delete(env) unless env['handler']
+      keep_alive.delete(env)
     end
 
     def on_error(env, error)
